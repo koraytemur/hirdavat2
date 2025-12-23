@@ -13,8 +13,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useStore } from '../../src/store/useStore';
 import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from '../../src/services/api';
 import { Product, Category, MultilingualText } from '../../src/types';
@@ -29,6 +31,7 @@ export default function AdminProductsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [productImages, setProductImages] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     name: { nl: '', fr: '', en: '', tr: '' } as MultilingualText,
