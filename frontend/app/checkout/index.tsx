@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStore } from '../../src/store/useStore';
@@ -30,6 +30,10 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { t, cart, getCartTotal, clearCart, appliedDiscount, setAppliedDiscount } = useStore();
   const { subtotal, tax, total } = getCartTotal();
+  const insets = useSafeAreaInsets();
+  
+  // Extra padding for bottom navigation area
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 0);
 
   const [loading, setLoading] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
