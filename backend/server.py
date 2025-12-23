@@ -419,6 +419,8 @@ async def get_site_settings():
         # Return default settings
         default = SiteSettings()
         return default.dict()
+    # Remove MongoDB _id field
+    settings.pop("_id", None)
     return settings
 
 @api_router.put("/settings")
@@ -433,7 +435,10 @@ async def update_site_settings(settings: SiteSettingsUpdate, user = Depends(requ
         new_settings = SiteSettings(**update_data)
         await db.settings.insert_one(new_settings.dict())
     
-    return await db.settings.find_one({"id": "site_settings"})
+    result = await db.settings.find_one({"id": "site_settings"})
+    # Remove MongoDB _id field
+    result.pop("_id", None)
+    return result
 
 # ==================== BULK EMAIL ENDPOINT ====================
 
