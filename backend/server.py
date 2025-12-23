@@ -254,7 +254,7 @@ async def get_products(
         ]
     
     products = await db.products.find(query).skip(skip).limit(limit).to_list(limit)
-    return [Product(**{**prod, "id": str(prod.get("_id", prod.get("id")))}) for prod in products]
+    return [Product(**{**prod, "id": prod.get("id")}) for prod in products]
 
 @api_router.get("/products/{product_id}", response_model=Product)
 async def get_product(product_id: str):
