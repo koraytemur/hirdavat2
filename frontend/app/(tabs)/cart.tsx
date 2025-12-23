@@ -141,6 +141,7 @@ const styles = StyleSheet.create({
   summaryContainer: {
     backgroundColor: '#fff',
     padding: 20,
+    paddingBottom: 30,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     shadowColor: '#000',
