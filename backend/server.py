@@ -1,15 +1,18 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Query, Depends, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -32,6 +35,69 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ==================== AUTHENTICATION ====================
+
+SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer(auto_error=False)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        return None
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        user = await db.users.find_one({"id": user_id})
+        return user
+    except JWTError:
+        return None
+
+async def require_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def require_admin(user = Depends(require_auth)):
+    if user.get("role") not in ["admin", "superadmin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+async def require_superadmin(user = Depends(require_auth)):
+    if user.get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    return user
+
 # ==================== MODELS ====================
 
 # Helper for ObjectId
@@ -44,6 +110,70 @@ class MultilingualText(BaseModel):
     fr: str = ""  # French
     en: str = ""  # English
     tr: str = ""  # Turkish
+
+# User Models
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    name: str
+    phone: str = ""
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+
+class User(BaseModel):
+    id: str = Field(default_factory=str_id)
+    email: str
+    name: str
+    phone: str = ""
+    address: str = ""
+    city: str = ""
+    postal_code: str = ""
+    country: str = "Belgium"
+    role: str = "user"  # user, admin, superadmin
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Site Settings Model
+class SiteSettings(BaseModel):
+    id: str = "site_settings"
+    site_name: MultilingualText = MultilingualText(nl="Hardware Store", fr="Quincaillerie", en="Hardware Store", tr="Hırdavat Dükkanı")
+    site_logo: str = ""  # base64 image
+    contact_email: str = ""
+    contact_phone: str = ""
+    contact_address: str = ""
+    about_text: MultilingualText = MultilingualText()
+    footer_text: MultilingualText = MultilingualText()
+    social_facebook: str = ""
+    social_instagram: str = ""
+    primary_color: str = "#e67e22"
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SiteSettingsUpdate(BaseModel):
+    site_name: Optional[MultilingualText] = None
+    site_logo: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_address: Optional[str] = None
+    about_text: Optional[MultilingualText] = None
+    footer_text: Optional[MultilingualText] = None
+    social_facebook: Optional[str] = None
+    social_instagram: Optional[str] = None
+    primary_color: Optional[str] = None
+
+# Email Model
+class BulkEmailRequest(BaseModel):
+    subject: str
+    message: str
+    send_to: str = "all"  # all, active
 
 # Category Models
 class CategoryBase(BaseModel):
