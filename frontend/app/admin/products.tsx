@@ -178,7 +178,7 @@ export default function AdminProductsScreen() {
         category_id: formData.category_id,
         brand: formData.brand,
         unit: formData.unit,
-        images: [],
+        images: productImages,
         is_active: true,
         specifications: {},
       };
