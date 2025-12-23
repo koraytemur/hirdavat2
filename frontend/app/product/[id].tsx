@@ -153,7 +153,7 @@ export default function ProductDetailScreen() {
 
       {/* Bottom Action Bar */}
       {product.stock > 0 && (
-        <View style={styles.actionBar}>
+        <View style={[styles.actionBar, { paddingBottom: bottomPadding + 16 }]}>
           <View style={styles.quantityContainer}>
             <TouchableOpacity
               style={styles.quantityButton}
