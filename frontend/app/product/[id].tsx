@@ -108,7 +108,10 @@ export default function ProductDetailScreen() {
           <Text style={styles.sku}>SKU: {product.sku}</Text>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>€{product.price.toFixed(2)}</Text>
+            <View>
+              <Text style={styles.price}>€{(product.price * 1.21).toFixed(2)}</Text>
+              <Text style={styles.vatText}>BTW inbegrepen (21%)</Text>
+            </View>
             <View style={styles.stockBadge}>
               <Ionicons
                 name={product.stock > 0 ? 'checkmark-circle' : 'close-circle'}
