@@ -2,12 +2,17 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../src/store/useStore';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { t, cart } = useStore();
+  const insets = useSafeAreaInsets();
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Calculate proper bottom padding for different devices
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 10 : 0);
 
   return (
     <Tabs
@@ -19,8 +24,8 @@ export default function TabLayout() {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#eee',
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + bottomPadding,
+          paddingBottom: bottomPadding + 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
