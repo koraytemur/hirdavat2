@@ -1162,7 +1162,28 @@ async def seed_database():
     
     await db.discounts.insert_one(discount)
     
-    return {"message": "Database seeded successfully", "categories": len(categories), "products": len(products)}
+    # Create superadmin user
+    superadmin_exists = await db.users.find_one({"role": "superadmin"})
+    if not superadmin_exists:
+        superadmin = {
+            "id": str(uuid.uuid4()),
+            "email": "admin@hardwarestore.be",
+            "password_hash": get_password_hash("Admin123!"),
+            "name": "Super Admin",
+            "phone": "+32 XXX XXX XXX",
+            "role": "superadmin",
+            "is_active": True,
+            "created_at": datetime.utcnow()
+        }
+        await db.users.insert_one(superadmin)
+    
+    # Create default site settings
+    settings_exists = await db.settings.find_one({"id": "site_settings"})
+    if not settings_exists:
+        default_settings = SiteSettings()
+        await db.settings.insert_one(default_settings.dict())
+    
+    return {"message": "Database seeded successfully", "categories": len(categories), "products": len(products), "superadmin_email": "admin@hardwarestore.be", "superadmin_password": "Admin123!"}
 
 # Root endpoint
 @api_router.get("/")
