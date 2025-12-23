@@ -60,52 +60,9 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen 
-          name="admin/index" 
+          name="admin" 
           options={{ 
-            headerShown: true,
-            headerTitle: 'Admin',
-          }} 
-        />
-        <Stack.Screen 
-          name="admin/products" 
-          options={{ 
-            headerShown: true,
-            headerTitle: 'Products',
-          }} 
-        />
-        <Stack.Screen 
-          name="admin/categories" 
-          options={{ 
-            headerShown: true,
-            headerTitle: 'Categories',
-          }} 
-        />
-        <Stack.Screen 
-          name="admin/orders" 
-          options={{ 
-            headerShown: true,
-            headerTitle: 'Orders',
-          }} 
-        />
-        <Stack.Screen 
-          name="admin/customers" 
-          options={{ 
-            headerShown: true,
-            headerTitle: 'Customers',
-          }} 
-        />
-        <Stack.Screen 
-          name="admin/discounts" 
-          options={{ 
-            headerShown: true,
-            headerTitle: 'Discounts',
-          }} 
-        />
-        <Stack.Screen 
-          name="admin/settings" 
-          options={{ 
-            headerShown: true,
-            headerTitle: 'Site Settings',
+            headerShown: false,
           }} 
         />
       </Stack>
