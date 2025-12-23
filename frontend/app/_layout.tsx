@@ -1,13 +1,17 @@
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useStore } from '../src/store/useStore';
+import { useAuthStore } from '../src/store/authStore';
 
 export default function RootLayout() {
   const { initializeStore } = useStore();
+  const { loadUser } = useAuthStore();
 
   useEffect(() => {
     initializeStore();
+    loadUser();
   }, []);
 
   return (
